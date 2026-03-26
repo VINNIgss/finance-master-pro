@@ -1,1 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Master Pro</title>
 
+<style>
+body{
+  font-family:Arial;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  padding:20px;
+}
+h1{margin-bottom:10px}
+.card{
+  background:#1e293b;
+  padding:15px;
+  border-radius:16px;
+  margin-bottom:15px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3)
+}
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:#22c55e;
+  font-weight:bold;
+}
+.gasto{
+  background:#334155;
+  padding:12px;
+  border-radius:12px;
+  margin-top:10px;
+}
+.top{
+  display:flex;
+  gap:10px;
+}
+.box{
+  flex:1;
+  background:#0ea5e9;
+  padding:10px;
+  border-radius:12px;
+  text-align:center;
+}
+.small{font-size:12px;opacity:0.7}
+</style>
+
+</head>
+<body>
+
+<h1>💳 Finance Master</h1>
+
+<div class="card">
+<input id="desc" placeholder="Descrição">
+<input id="valor" type="number" placeholder="Valor">
+
+<select id="metodo">
+<option>Cartão Crédito</option>
+<option>PIX</option>
+<option>Débito</option>
+<option>Dinheiro</option>
+</select>
+
+<select id="categoria">
+<option>Alimentação</option>
+<option>Transporte</option>
+<option>Mercado</option>
+<option>Lazer</option>
+<option>Outros</option>
+</select>
+
+<input id="parcelas" type="number" value="1" min="1">
+
+<button onclick="add()">Adicionar gasto</button>
+</div>
+
+<div class="card top">
+<div class="box">Total<br><b id="total">0</b></div>
+<div class="box">Cartão<br><b id="credito">0</b></div>
+<div class="box">PIX<br><b id="pix">0</b></div>
+</div>
+
+<div class="card">
+<h3>Fatura / Histórico</h3>
+<div id="lista"></div>
+</div>
+
+<script>
+
+let dados=JSON.parse(localStorage.getItem("master_pro")||"[]")
+
+function salvar(){
+ localStorage.setItem("master_pro",JSON.stringify(dados))
+}
+
+function add(){
+ let desc=document.getElementById("desc").value
+ let valor=Number(document.getElementById("valor").value)
+ let metodo=document.getElementById("metodo").value
+ let categoria=document.getElementById("categoria").value
+ let parcelas=Number(document.getElementById("parcelas").value)
+
+ if(!desc||!valor)return
+
+ for(let i=1;i<=parcelas;i++){
+  dados.push({
+   desc,valor,metodo,categoria,
+   parcela:i,totalParcelas:parcelas,
+   data:new Date().toLocaleString()
+  })
+ }
+
+ salvar()
+ render()
+}
+
+function remover(i){
+ dados.splice(i,1)
+ salvar()
+ render()
+}
+
+function render(){
+ let lista=document.getElementById("lista")
+ lista.innerHTML=""
+
+ let total=0
+ let credito=0
+ let pix=0
+
+ dados.forEach((d,i)=>{
+  total+=d.valor
+  if(d.metodo==="Cartão Crédito") credito+=d.valor
+  if(d.metodo==="PIX") pix+=d.valor
+
+  let div=document.createElement("div")
+  div.className="gasto"
+
+  div.innerHTML=`
+  <b>${d.desc}</b><br>
+  R$ ${d.valor} • ${d.metodo} • ${d.categoria}<br>
+  ${d.totalParcelas>1?`Parcela ${d.parcela}/${d.totalParcelas}<br>`:""}
+  <span class="small">${d.data}</span><br>
+  <button onclick="remover(${i})">Excluir</button>
+  `
+
+  lista.appendChild(div)
+ })
+
+ document.getElementById("total").innerText=total.toFixed(2)
+ document.getElementById("credito").innerText=credito.toFixed(2)
+ document.getElementById("pix").innerText=pix.toFixed(2)
+}
+
+render()
+
+</script>
+
+</body>
+</html>
